@@ -1,5 +1,5 @@
-![GitHub Release](https://img.shields.io/github/v/release/hexbyt3/PLZASeedFinder)
-![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/hexbyt3/PLZASeedFinder/total?color=violet)
+![GitHub Release](https://img.shields.io/github/v/release/hexbyt3/PLZA-Seed-Finder)
+![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/hexbyt3/PLZA-Seed-Finder/total?color=violet)
 
 
 # PLZA Seed Finder Plugin for PKHeX
@@ -32,9 +32,7 @@ This plugin **searches through millions of valid seeds** to find ones that produ
 **Author:** [@hexbyt3](https://github.com/hexbyt3)
 
 ## Screenshots
-<img width="823" height="549" alt="image" src="https://github.com/user-attachments/assets/a17a0de1-d206-4470-96e8-9780aab46f2d" />
-
-<img width="307" height="308" alt="image" src="https://github.com/user-attachments/assets/f4214879-9762-4454-8f87-6f253442aec7" />
+<img width="1528" height="830" alt="image" src="https://github.com/user-attachments/assets/8aedce04-8624-4edf-9ba7-f145ba4cc012" />
 
 ## Features
 
