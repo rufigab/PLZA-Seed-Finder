@@ -80,6 +80,8 @@ namespace PLZASeedFinderPlugin.GUI
             this.ivSpeMax = new System.Windows.Forms.NumericUpDown();
             this.ivMinLabel = new System.Windows.Forms.Label();
             this.ivMaxLabel = new System.Windows.Forms.Label();
+            this.scaleLabel = new System.Windows.Forms.Label();
+            this.scaleCombo = new System.Windows.Forms.ComboBox();
 
             this.searchOptionsGroup = new System.Windows.Forms.GroupBox();
             this.maxSeedsLabel = new System.Windows.Forms.Label();
@@ -460,6 +462,8 @@ namespace PLZASeedFinderPlugin.GUI
             // ivGroup
             this.ivGroup.Controls.Add(this.ivMaxLabel);
             this.ivGroup.Controls.Add(this.ivMinLabel);
+            this.ivGroup.Controls.Add(this.scaleCombo);
+            this.ivGroup.Controls.Add(this.scaleLabel);
             this.ivGroup.Controls.Add(this.ivSpeMax);
             this.ivGroup.Controls.Add(this.ivSpeMin);
             this.ivGroup.Controls.Add(this.ivSpeLabel);
@@ -480,7 +484,7 @@ namespace PLZASeedFinderPlugin.GUI
             this.ivGroup.Controls.Add(this.ivHpLabel);
             this.ivGroup.Location = new System.Drawing.Point(8, 392);
             this.ivGroup.Name = "ivGroup";
-            this.ivGroup.Size = new System.Drawing.Size(360, 110);
+            this.ivGroup.Size = new System.Drawing.Size(360, 140);
             this.ivGroup.TabIndex = 4;
             this.ivGroup.TabStop = false;
             this.ivGroup.Text = "IV Ranges";
@@ -639,6 +643,22 @@ namespace PLZASeedFinderPlugin.GUI
             this.ivSpeMax.TabIndex = 19;
             this.ivSpeMax.Value = new decimal(new int[] { 31, 0, 0, 0 });
 
+            // scaleLabel
+            this.scaleLabel.AutoSize = true;
+            this.scaleLabel.Location = new System.Drawing.Point(140, 105);
+            this.scaleLabel.Name = "scaleLabel";
+            this.scaleLabel.Size = new System.Drawing.Size(38, 15);
+            this.scaleLabel.TabIndex = 20;
+            this.scaleLabel.Text = "Scale:";
+
+            // scaleCombo
+            this.scaleCombo.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.scaleCombo.FormattingEnabled = true;
+            this.scaleCombo.Location = new System.Drawing.Point(185, 102);
+            this.scaleCombo.Name = "scaleCombo";
+            this.scaleCombo.Size = new System.Drawing.Size(80, 23);
+            this.scaleCombo.TabIndex = 21;
+
             // searchOptionsGroup
             this.searchOptionsGroup.Controls.Add(this.exportButton);
             this.searchOptionsGroup.Controls.Add(this.searchButton);
@@ -648,7 +668,7 @@ namespace PLZASeedFinderPlugin.GUI
             this.searchOptionsGroup.Controls.Add(this.startSeedLabel);
             this.searchOptionsGroup.Controls.Add(this.maxSeedsNum);
             this.searchOptionsGroup.Controls.Add(this.maxSeedsLabel);
-            this.searchOptionsGroup.Location = new System.Drawing.Point(8, 508);
+            this.searchOptionsGroup.Location = new System.Drawing.Point(8, 538);
             this.searchOptionsGroup.Name = "searchOptionsGroup";
             this.searchOptionsGroup.Size = new System.Drawing.Size(360, 150);
             this.searchOptionsGroup.TabIndex = 5;
@@ -746,6 +766,7 @@ namespace PLZASeedFinderPlugin.GUI
             new System.Windows.Forms.DataGridViewTextBoxColumn { HeaderText = "Nature", Width = 80 },
             new System.Windows.Forms.DataGridViewTextBoxColumn { HeaderText = "Ability", Width = 100 },
             new System.Windows.Forms.DataGridViewTextBoxColumn { HeaderText = "IVs", Width = 120 },
+            new System.Windows.Forms.DataGridViewTextBoxColumn { HeaderText = "Scale", Width = 50 },
             new System.Windows.Forms.DataGridViewTextBoxColumn { HeaderText = "Alpha", Width = 60 }
             });
             this.resultsGrid.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -901,6 +922,8 @@ namespace PLZASeedFinderPlugin.GUI
         private System.Windows.Forms.Label ivSpeLabel;
         private System.Windows.Forms.NumericUpDown ivSpeMin;
         private System.Windows.Forms.NumericUpDown ivSpeMax;
+        private System.Windows.Forms.Label scaleLabel;
+        private System.Windows.Forms.ComboBox scaleCombo;
 
         private System.Windows.Forms.GroupBox searchOptionsGroup;
         private System.Windows.Forms.Label maxSeedsLabel;

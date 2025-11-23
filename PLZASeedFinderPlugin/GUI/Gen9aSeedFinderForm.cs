@@ -63,6 +63,7 @@ public partial class Gen9aSeedFinderForm : Form
         InitializePreviewPanel();
         LoadSpeciesList();
         LoadTrainerData();
+        InitializeScaleCombo();
         SetupEventHandlers();
 
         // Cancel search when form is closing
@@ -217,7 +218,7 @@ public partial class Gen9aSeedFinderForm : Form
             $"SpD: {pk.IV_SPD,2} IV | {pk.Stat_SPD,3} Total",
             $"Spe: {pk.IV_SPE,2} IV | {pk.Stat_SPE,3} Total",
             "",
-            $"Height: {pk.HeightScalar} | Weight: {pk.WeightScalar}"
+            $"Scale: {pk.Scale} | Height: {pk.HeightScalar} | Weight: {pk.WeightScalar}"
         };
         _previewStats.Text = string.Join("\n", stats);
 
@@ -744,6 +745,7 @@ public partial class Gen9aSeedFinderForm : Form
         var encounterIndex = encounterCombo.SelectedValue as int? ?? -1;
         var selectedEncounterText = (encounterCombo.SelectedItem as ComboItem)?.Text;
         var ivRanges = GetIVRanges();
+        var scaleRange = GetScaleRange();
         var maxResults = (int)maxSeedsNum.Value;
 
         lock (_resultsLock)
@@ -767,7 +769,7 @@ public partial class Gen9aSeedFinderForm : Form
 
         try
         {
-            await Task.Run(() => SearchSeeds(species, form, criteria, encounterIndex, selectedEncounterText, ivRanges, maxResults, _searchCts.Token));
+            await Task.Run(() => SearchSeeds(species, form, criteria, encounterIndex, selectedEncounterText, ivRanges, scaleRange, maxResults, _searchCts.Token));
         }
         catch (OperationCanceledException)
         {
@@ -792,6 +794,24 @@ public partial class Gen9aSeedFinderForm : Form
     /// Represents an IV range with minimum and maximum values.
     /// </summary>
     private record struct IVRange(int Min, int Max);
+
+    /// <summary>
+    /// Represents a Scale range with minimum and maximum values.
+    /// </summary>
+    private record struct ScaleRange(int Min, int Max);
+
+    /// <summary>
+    /// Scale size type options for the dropdown.
+    /// </summary>
+    private enum ScaleSizeType
+    {
+        Any,
+        XS,
+        S,
+        M,
+        L,
+        XL
+    }
 
     /// <summary>
     /// Gets the encounter criteria from the UI controls.
@@ -855,6 +875,41 @@ public partial class Gen9aSeedFinderForm : Form
     }
 
     /// <summary>
+    /// Initializes the scale dropdown with size presets.
+    /// </summary>
+    private void InitializeScaleCombo()
+    {
+        scaleCombo.Items.Clear();
+        scaleCombo.Items.Add(new ComboItem("Any", (int)ScaleSizeType.Any));
+        scaleCombo.Items.Add(new ComboItem("XS", (int)ScaleSizeType.XS));
+        scaleCombo.Items.Add(new ComboItem("S", (int)ScaleSizeType.S));
+        scaleCombo.Items.Add(new ComboItem("M", (int)ScaleSizeType.M));
+        scaleCombo.Items.Add(new ComboItem("L", (int)ScaleSizeType.L));
+        scaleCombo.Items.Add(new ComboItem("XL", (int)ScaleSizeType.XL));
+        scaleCombo.DisplayMember = "Text";
+        scaleCombo.ValueMember = "Value";
+        scaleCombo.SelectedIndex = 0; // Default to "Any"
+    }
+
+    /// <summary>
+    /// Gets the Scale range from the UI controls based on the selected size type.
+    /// </summary>
+    /// <returns>Scale range for searching</returns>
+    private ScaleRange GetScaleRange()
+    {
+        var selectedType = (ScaleSizeType)(scaleCombo.SelectedValue as int? ?? 0);
+        return selectedType switch
+        {
+            ScaleSizeType.XS => new ScaleRange(0, 15),      // < 0x10
+            ScaleSizeType.S => new ScaleRange(16, 47),      // >= 0x10 and < 0x30
+            ScaleSizeType.M => new ScaleRange(48, 207),     // >= 0x30 and < 0xD0
+            ScaleSizeType.L => new ScaleRange(208, 239),    // >= 0xD0 and < 0xF0
+            ScaleSizeType.XL => new ScaleRange(240, 255),   // >= 0xF0
+            _ => new ScaleRange(0, 255),                    // Any/RANDOM
+        };
+    }
+
+    /// <summary>
     /// Gets the selected ability permission from the UI.
     /// </summary>
     /// <returns>Ability permission selection</returns>
@@ -905,9 +960,10 @@ public partial class Gen9aSeedFinderForm : Form
     /// <param name="encounterIndex">Selected encounter index</param>
     /// <param name="selectedEncounterText">Selected encounter description</param>
     /// <param name="ivRanges">IV ranges to search for</param>
+    /// <param name="scaleRange">Scale range to search for</param>
     /// <param name="maxResults">Maximum number of results</param>
     /// <param name="token">Cancellation token</param>
-    private void SearchSeeds(int species, byte form, EncounterCriteria criteria, int encounterIndex, string? selectedEncounterText, IVRange[] ivRanges, int maxResults, CancellationToken token)
+    private void SearchSeeds(int species, byte form, EncounterCriteria criteria, int encounterIndex, string? selectedEncounterText, IVRange[] ivRanges, ScaleRange scaleRange, int maxResults, CancellationToken token)
     {
         var results = new List<SeedResult>();
 
@@ -946,7 +1002,7 @@ public partial class Gen9aSeedFinderForm : Form
                     foreach (var wrapper in encountersToCheck)
                     {
                         // First, quickly verify if seed is valid without full generation
-                        if (!QuickVerifySeed(wrapper.Encounter, currentSeed, criteria, ivRanges, tr))
+                        if (!QuickVerifySeed(wrapper.Encounter, currentSeed, criteria, ivRanges, scaleRange, tr))
                             continue;
 
                         // Only generate full Pokemon for valid seeds
@@ -954,8 +1010,8 @@ public partial class Gen9aSeedFinderForm : Form
                         if (pk == null)
                             continue;
 
-                        // Verify all criteria including shiny, nature, gender, ability, and IVs
-                        if (!CheckPokemonMatchesCriteria(pk, criteria, ivRanges))
+                        // Verify all criteria including shiny, nature, gender, ability, IVs, and scale
+                        if (!CheckPokemonMatchesCriteria(pk, criteria, ivRanges, scaleRange))
                             continue;
 
                         var result = new SeedResult
@@ -1038,9 +1094,10 @@ public partial class Gen9aSeedFinderForm : Form
     /// <param name="seed">Seed value to check</param>
     /// <param name="criteria">Search criteria</param>
     /// <param name="ivRanges">IV ranges to validate</param>
+    /// <param name="scaleRange">Scale range to validate</param>
     /// <param name="tr">Trainer information</param>
     /// <returns>True if the seed potentially matches criteria, false otherwise</returns>
-    private bool QuickVerifySeed(object encounter, ulong seed, EncounterCriteria criteria, IVRange[] ivRanges, ITrainerInfo tr)
+    private bool QuickVerifySeed(object encounter, ulong seed, EncounterCriteria criteria, IVRange[] ivRanges, ScaleRange scaleRange, ITrainerInfo tr)
     {
         // Get PersonalInfo to pass to GetParams
         var pi = encounter switch
@@ -1121,6 +1178,10 @@ public partial class Gen9aSeedFinderForm : Form
         };
 
         if (!matchesShiny)
+            return false;
+
+        // Check scale
+        if (pk.Scale < scaleRange.Min || pk.Scale > scaleRange.Max)
             return false;
 
         return true;
@@ -1504,8 +1565,9 @@ public partial class Gen9aSeedFinderForm : Form
     /// <param name="pk">Generated Pokémon</param>
     /// <param name="criteria">Search criteria</param>
     /// <param name="ivRanges">IV ranges to check</param>
+    /// <param name="scaleRange">Scale range to check</param>
     /// <returns>True if matches criteria, false otherwise</returns>
-    private bool CheckPokemonMatchesCriteria(PA9 pk, EncounterCriteria criteria, IVRange[] ivRanges)
+    private bool CheckPokemonMatchesCriteria(PA9 pk, EncounterCriteria criteria, IVRange[] ivRanges, ScaleRange scaleRange)
     {
         // Check shiny
         bool matchesShiny = criteria.Shiny switch
@@ -1534,6 +1596,10 @@ public partial class Gen9aSeedFinderForm : Form
 
         // Check ability
         if (criteria.Ability != AbilityPermission.Any12H && !CheckAbilityCriteria(pk, criteria.Ability))
+            return false;
+
+        // Check scale
+        if (pk.Scale < scaleRange.Min || pk.Scale > scaleRange.Max)
             return false;
 
         return true;
@@ -1601,6 +1667,7 @@ public partial class Gen9aSeedFinderForm : Form
                         result.Pokemon.Nature.ToString(),
                         GetAbilityName(result.Pokemon),
                         GetIVString(result.Pokemon),
+                        result.Pokemon.Scale.ToString(),
                         result.Pokemon.IsAlpha ? "Yes" : "No"
                     );
 
